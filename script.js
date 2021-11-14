@@ -18,15 +18,26 @@ const obj = JSON.parse(
     .replace(/(?<="(\{|\)))"v\d"(?=(\}|\))")/gs, (s) => s.replace(/"/g, "'"))
 );
 
+console.log('Here is your profile JSON data:');
+console.log(obj);
+
 const regions = extractRegions(obj);
 
-// we'll be displaying relative counts by updating 
+console.log('Here are your regions:');
+console.log(regions);
+
+// we'll be displaying relative counts by updating
 // the region ::after pseudo elements in this style
 // tag
 const stylesheet = document.createElement('style');
 document.body.append(stylesheet);
 
-updateUI1();
+try {
+  updateUI1();
+} catch (e) {
+  console.log('Caught an error in updateUI1():');
+  console.log(e);
+}
 
 // update subregions that are visible by default
 // and not hidden behind a +16 regions button
@@ -34,18 +45,23 @@ function updateUI1() {
   document
     .querySelectorAll('.country-name.js-country-name-group.js-country-group.b3')
     .forEach((el) => {
-      const textContent = el.querySelector('strong')?.textContent;
-      if (!textContent) {
-        return;
+      try {
+        const textContent = el.querySelector('strong')?.textContent;
+        if (!textContent) {
+          return;
+        }
+
+        el.id = textContent.replace(/ /g, '-');
+
+        const { num_relatives } = regions.find(
+          (region) => region.state === textContent
+        );
+
+        stylesheet.innerHTML += `#${el.id}::after { content: '(${num_relatives} relatives)'; }`;
+      } catch (e) {
+        console.log('Caught an error in a .forEach in updateUI1():');
+        console.log(e);
       }
-
-      el.id = textContent.replace(/ /g, '-');
-
-      const { num_relatives } = regions.find(
-        (region) => region.state === textContent
-      );
-
-      stylesheet.innerHTML += `#${el.id}::after { content: '(${num_relatives} relatives)'; }`;
     });
 }
 
@@ -54,20 +70,28 @@ function updateUI1() {
 // updated too.
 document.addEventListener('click', ({ target }) => {
   if (target.matches('.accordion-trigger *')) {
-    updateUI2();
+    try {
+      updateUI2();
+    } catch (e) {
+      console.log('Caught an error in document.addEventListener("click", ...):');
+      console.log(e);
+    }
   }
 });
 
 // update revealed hidden subregions
 function updateUI2() {
   document.querySelectorAll('button[data-subregion-id]').forEach((el) => {
-    const { subregionId } = el.dataset;
-    const { num_relatives } = regions.find(
-      (region) => region.subregion_id === subregionId
-    );
-    stylesheet.innerHTML += `button[data-subregion-id="${subregionId}"]::after {
-    content: '(${num_relatives} relatives)';
-  }`;
+    try {
+      const { subregionId } = el.dataset;
+      const { num_relatives } = regions.find(
+        (region) => region.subregion_id === subregionId
+      );
+      stylesheet.innerHTML += `button[data-subregion-id="${subregionId}"]::after { content: '(${num_relatives} relatives)'; }`;
+    } catch (e) {
+      console.log('Caught an error in a .forEach in updateUI2():');
+      console.log(e);
+    }
   });
 }
 
@@ -75,14 +99,15 @@ function updateUI2() {
  * There's a LOT of stuff in the profile JSON.
  * We'll be extracting the region data and
  * ignoring everything else.
- * @returns {{ 
+ * @returns {{
  *  num_gp: number,
- *  subregion_id: string, 
- *  num_relatives: number, 
- *  state: string 
+ *  subregion_id: string,
+ *  num_relatives: number,
+ *  state: string
  * }[]} Regions
  */
 function extractRegions(obj) {
+  try {
   return obj.populationTree.children
     .map((child) => {
       return child.children.map((child) => {
@@ -93,5 +118,9 @@ function extractRegions(obj) {
         });
       });
     })
-    .flat(Infinity);
+      .flat(Infinity);
+  } catch (e) {
+    console.log('Caught an error in extractRegions(obj):');
+    console.log(e);
+  }
 }
