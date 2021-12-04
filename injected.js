@@ -52,11 +52,17 @@ function scrapeProfileData() {
 function extractRegions(profileData) {
   return profileData.populationTree.children
     .map((child) =>
-      child.children.map((child) =>
-        child.children.map((child) =>
+      child.children.map((child) => {
+        // Eastern European regions
+        const children1 = child.countries.map(
+          (country) => country.aggregations
+        );
+        // Northwestern European regions
+        const children2 = child.children.map((child) =>
           child.countries.map((country) => country.aggregations)
-        )
-      )
+        );
+        return children1.concat(children2);
+      })
     )
     .flat(Infinity);
 }
